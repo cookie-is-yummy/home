@@ -9,7 +9,9 @@
 
 <div id="version-selector">
   <label for="versions">Select Version:</label>
-  <select id="versions"></select>
+  <select id="versions">
+    <option value="current">Current Version</option>
+  </select>
 </div>
 
 <div id="changelog">
@@ -19,10 +21,10 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const changelogDir = './changelog';
-    fetch(`${changelogDir}/`)
+    fetch(`${changelogDir}/index.html`)
       .then(response => {
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error('Response NOT OK');
         }
         return response.text();
       })
@@ -44,26 +46,30 @@
 
         versionsSelect.addEventListener('change', function() {
           const selectedVersion = versionsSelect.value;
-          fetch(`${changelogDir}/${selectedVersion}/index.html`)
-            .then(response => {
-              if (!response.ok) {
-                throw new Error('Network response was not ok');
-              }
-              return response.text();
-            })
-            .then(html => {
-              document.getElementById('changelog').innerHTML = html;
-            });
+          if (selectedVersion === 'current') {
+            document.getElementById('changelog').innerHTML = '<p>Current version of the site.</p>';
+          } else {
+            fetch(`${changelogDir}/${selectedVersion}/index.html`)
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error('Network response was not ok');
+                }
+                return response.text();
+              })
+              .then(html => {
+                document.getElementById('changelog').innerHTML = html;
+              });
+          }
         });
 
         // Load the latest version by default
         if (versions.length > 0) {
-          versionsSelect.value = versions[0];
+          versionsSelect.value = 'current';
           versionsSelect.dispatchEvent(new Event('change'));
         }
       })
       .catch(error => {
-        console.error('There has been a problem with your fetch operation:', error);
+        console.error('Error: ', error);
       });
   });
 </script>
