@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Changelog Viewer</title>
+  <link href="style.css" rel="stylesheet"/>
+</head>
+<body>
+
+<div id="version-selector">
+  <label for="versions">Select Version:</label>
+  <select id="versions"></select>
+</div>
+
+<div id="changelog">
+    <!-- JS automatically adds changelog items here: -->
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const changelogDir = 'changelog';
+    fetch(changelogDir)
+      .then(response => response.text())
+      .then(data => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data, 'text/html');
+        const versions = Array.from(doc.querySelectorAll('a'))
+          .map(a => a.href.split('/').slice(-2, -1)[0])
+          .filter(name => name && !name.startsWith('.'))
+          .sort((a, b) => b.localeCompare(a)); // Sort versions in descending order
+
+        const versionsSelect = document.getElementById('versions');
+        versions.forEach(version => {
+          const option = document.createElement('option');
+          option.value = version;
+          option.textContent = version;
+          versionsSelect.appendChild(option);
+        });
+
+        versionsSelect.addEventListener('change', function() {
+          const selectedVersion = versionsSelect.value;
+          fetch(`${changelogDir}/${selectedVersion}/index.html`)
+            .then(response => response.text())
+            .then(html => {
+              document.getElementById('changelog').innerHTML = html;
+            });
+        });
+
+        // Load the latest version by default
+        if (versions.length > 0) {
+          versionsSelect.value = versions[0];
+          versionsSelect.dispatchEvent(new Event('change'));
+        }
+      });
+  });
+</script>
+</body>
+</html>
