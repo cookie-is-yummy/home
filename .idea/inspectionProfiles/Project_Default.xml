@@ -1,0 +1,28 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="8">
+            <item index="0" class="java.lang.String" itemvalue="openai" />
+            <item index="1" class="java.lang.String" itemvalue="datetime" />
+            <item index="2" class="java.lang.String" itemvalue="hashlib" />
+            <item index="3" class="java.lang.String" itemvalue="langchain" />
+            <item index="4" class="java.lang.String" itemvalue="email.mime.text" />
+            <item index="5" class="java.lang.String" itemvalue="smtplib" />
+            <item index="6" class="java.lang.String" itemvalue="flask" />
+            <item index="7" class="java.lang.String" itemvalue="mysql.connector" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="false" level="WARNING" enabled_by_default="false">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="flask_app.*" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
