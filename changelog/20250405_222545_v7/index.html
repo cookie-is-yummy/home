@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Changelog Viewer</title>
+  <link href="style.css" rel="stylesheet"/>
+</head>
+<body>
+
+<div id="version-selector">
+  <div id="versions" class="custom-select">
+    <div class="select-selected">Current Version</div>
+    <div class="select-items select-hide">
+      <div data-value="current">Current Version</div>
+    </div>
+  </div>
+</div>
+
+<iframe id="changelog" style="width: 100%; height: 600px; border: none;"></iframe>
+
+<div id="current" style="display: none;">
+  <div class='container'>
+    <h1>Current Version</h1>
+    <p>This is the current version of the site.</p>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const changelogDir = './changelog';
+    const customSelect = document.getElementById('versions');
+    const selectSelected = customSelect.querySelector('.select-selected');
+    const selectItems = customSelect.querySelector('.select-items');
+    const changelogIframe = document.getElementById('changelog');
+
+    fetch(`${changelogDir}/index.html`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Response NOT OK');
+        }
+        return response.text();
+      })
+      .then(data => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data, 'text/html');
+        const versions = Array.from(doc.querySelectorAll('a'))
+          .map(a => a.href.split('/').slice(-2, -1)[0])
+          .filter(name => name && !name.startsWith('.'))
+          .sort((a, b) => b.localeCompare(a)); // Sort versions in descending order
+
+        versions.forEach(version => {
+          const option = document.createElement('div');
+          option.dataset.value = version;
+          option.textContent = version;
+          selectItems.appendChild(option);
+        });
+
+        selectItems.addEventListener('click', function(e) {
+          const selectedVersion = e.target.dataset.value;
+          selectSelected.textContent = e.target.textContent;
+          selectItems.classList.add('select-hide');
+          if (selectedVersion === 'current') {
+            changelogIframe.srcdoc = `
+              <html>
+                <head>
+                  <link href="style.css" rel="stylesheet"/>
+                </head>
+                <body>
+                  ${document.getElementById('current').innerHTML}
+                </body>
+              </html>`;
+          } else {
+            fetch(`${changelogDir}/${selectedVersion}/index.html`)
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error('Network response was not ok');
+                }
+                return response.text();
+              })
+              .then(html => {
+                const versionDoc = parser.parseFromString(html, 'text/html');
+                const basePath = `${changelogDir}/${selectedVersion}/`;
+
+                // Update paths for CSS
+                versionDoc.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+                  link.href = basePath + link.getAttribute('href');
+                });
+
+                // Update paths for scripts
+                versionDoc.querySelectorAll('script').forEach(script => {
+                  if (script.src) {
+                    script.src = basePath + script.getAttribute('src');
+                  }
+                });
+
+                // Update paths for images
+                versionDoc.querySelectorAll('img').forEach(img => {
+                  img.src = basePath + img.getAttribute('src');
+                });
+
+                changelogIframe.srcdoc = versionDoc.documentElement.outerHTML;
+
+                // Ensure background is white if originally invisible
+                changelogIframe.onload = function() {
+                  const iframeDoc = changelogIframe.contentDocument || changelogIframe.contentWindow.document;
+                  if (getComputedStyle(iframeDoc.body).backgroundColor === 'rgba(0, 0, 0, 0)') {
+                    iframeDoc.body.style.backgroundColor = 'white';
+                  }
+                };
+              });
+          }
+        });
+
+        selectSelected.addEventListener('click', function() {
+          selectItems.classList.toggle('select-hide');
+        });
+
+        // Load the latest version by default
+        if (versions.length > 0) {
+          selectSelected.textContent = 'Current Version';
+          selectItems.classList.add('select-hide');
+          changelogIframe.srcdoc = `
+            <html>
+              <head>
+                <link href="style.css" rel="stylesheet"/>
+              </head>
+              <body>
+                ${document.getElementById('current').innerHTML}
+              </body>
+            </html>`;
+        }
+      })
+      .catch(error => {
+        console.error('Error: ', error);
+      });
+  });
+</script>
+</body>
+</html>
